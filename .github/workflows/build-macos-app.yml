@@ -1,0 +1,49 @@
+name: Build macOS app
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          xcrun swiftc --version
+
+      - name: Build Hello.app
+        run: ./build.sh
+
+      - name: Inspect bundle
+        run: |
+          find build/Hello.app -print | sed 's|^build/||'
+          plutil -p build/Hello.app/Contents/Info.plist
+          codesign --display --verbose=2 build/Hello.app 2>&1
+
+      - name: Smoke test (launch, stay running, quit)
+        run: |
+          open build/Hello.app
+          sleep 5
+          pgrep -x Hello
+          screencapture -x build/screenshot.png || echo "screencapture unavailable"
+          osascript -e 'quit app "Hello"' || pkill -x Hello
+
+      # ditto keeps the executable bit and code signature intact inside the zip.
+      - name: Package
+        run: ditto -c -k --keepParent build/Hello.app build/Hello.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hello-macOS
+          path: build/Hello.zip
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshot
+          path: build/screenshot.png
+          if-no-files-found: ignore
