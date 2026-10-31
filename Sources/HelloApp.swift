@@ -53,7 +53,7 @@ struct GreetingView: View {
                         .frame(width: 36, height: 2)
                         .padding(.vertical, 14)
 
-                    Text(Self.formattedDate(context.date))
+                    Text(Self.dateFormatter.string(from: context.date))
                         .font(.system(size: 16, weight: .medium))
                         .kerning(0.16)
                         .foregroundStyle(theme.accent)
@@ -67,21 +67,13 @@ struct GreetingView: View {
         }
     }
 
-    /// Hungarian long date, e.g. "2026. október 30., péntek".
+    /// Hungarian date order with English month and day names, e.g. "2026. October 30., Friday".
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "hu_HU")
-        formatter.dateStyle = .full
-        formatter.timeStyle = .none
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "y. MMMM d., EEEE"
         return formatter
     }()
-
-    private static func formattedDate(_ date: Date) -> AttributedString {
-        var text = AttributedString(dateFormatter.string(from: date))
-        // Lets VoiceOver read the date with Hungarian pronunciation.
-        text.languageIdentifier = "hu"
-        return text
-    }
 }
 
 // MARK: - Time-of-day theme

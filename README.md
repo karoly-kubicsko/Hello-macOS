@@ -11,7 +11,8 @@ the same behaviour and colours:
 | 17:00–20:59   | Good evening, Károly    | `#3B2350`  | `#F3E6D8` | `#F2874B` |
 | 21:00–04:59   | Good night, Károly      | `#0B1026`  | `#E4E0F5` | `#F4D35E` |
 
-The date is shown in Hungarian long form, for example *2026. október 30., péntek*.
+The date is shown in Hungarian order with English month and day names, for
+example *2026. October 30., Friday*.
 The window refreshes every minute, so the greeting and the date change while it
 stays open. Closing the window quits the app.
 
