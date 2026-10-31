@@ -14,7 +14,7 @@ struct HelloApp: App {
                 .frame(minWidth: 420, minHeight: 300)
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 560, height: 380)
+        .defaultSize(width: 640, height: 380)
     }
 }
 
@@ -41,12 +41,13 @@ struct GreetingView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                    // Always a single line: in narrow windows the text shrinks instead of wrapping.
                     Text("\(theme.greeting), \(name)")
                         .font(.greeting(size: 50))
                         .kerning(-0.5)
                         .foregroundStyle(theme.foreground)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
 
                     Capsule()
                         .fill(theme.accent.opacity(0.75))
@@ -59,7 +60,6 @@ struct GreetingView: View {
                         .foregroundStyle(theme.accent)
                         .multilineTextAlignment(.center)
                 }
-                .frame(maxWidth: 380)
                 .padding(32)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.8), value: theme)
@@ -85,13 +85,13 @@ struct Theme: Equatable {
     let accent: Color
     let isDark: Bool
 
-    static let night = Theme(greeting: "Good night", background: Color(hex: 0x0B1026),
+    static let night = Theme(greeting: "Good Night", background: Color(hex: 0x0B1026),
                              foreground: Color(hex: 0xE4E0F5), accent: Color(hex: 0xF4D35E), isDark: true)
-    static let morning = Theme(greeting: "Good morning", background: Color(hex: 0xFFE8D6),
+    static let morning = Theme(greeting: "Good Morning", background: Color(hex: 0xFFE8D6),
                                foreground: Color(hex: 0x3A2E39), accent: Color(hex: 0xA6480B), isDark: false)
-    static let afternoon = Theme(greeting: "Good afternoon", background: Color(hex: 0xEAF4FB),
+    static let afternoon = Theme(greeting: "Good Afternoon", background: Color(hex: 0xEAF4FB),
                                  foreground: Color(hex: 0x16324F), accent: Color(hex: 0xB8790A), isDark: false)
-    static let evening = Theme(greeting: "Good evening", background: Color(hex: 0x3B2350),
+    static let evening = Theme(greeting: "Good Evening", background: Color(hex: 0x3B2350),
                                foreground: Color(hex: 0xF3E6D8), accent: Color(hex: 0xF2874B), isDark: true)
 
     init(greeting: String, background: Color, foreground: Color, accent: Color, isDark: Bool) {
