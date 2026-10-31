@@ -1,8 +1,9 @@
 # Hello — a native macOS app
 
-A small SwiftUI application that opens a window with a time-of-day greeting,
-shown on a single line, and today's date. It is the macOS counterpart of the
-iPhone web app "Hello", with the same hours and colours:
+A small SwiftUI application that opens a window with a time-of-day greeting and
+today's date. The greeting is shown on one line, and wraps onto centred lines
+when the window is too narrow for it. It is the macOS counterpart of the iPhone
+web app "Hello", with the same hours and colours:
 
 | Local time    | Greeting                | Background | Text      | Accent    |
 |---------------|-------------------------|------------|-----------|-----------|

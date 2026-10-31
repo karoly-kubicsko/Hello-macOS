@@ -10,8 +10,9 @@ struct HelloApp: App {
 
     var body: some Scene {
         Window("Hello", id: "main") {
+            // The minimum height leaves room for the greeting wrapped onto three lines.
             GreetingView()
-                .frame(minWidth: 420, minHeight: 300)
+                .frame(minWidth: 420, minHeight: 320)
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 640, height: 380)
@@ -41,13 +42,14 @@ struct GreetingView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Always a single line: in narrow windows the text shrinks instead of wrapping.
+                    // One line when the window is wide enough; otherwise it wraps onto
+                    // centred lines at full size (never shrunk or truncated).
                     Text("\(theme.greeting), \(name)")
                         .font(.greeting(size: 50))
                         .kerning(-0.5)
                         .foregroundStyle(theme.foreground)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Capsule()
                         .fill(theme.accent.opacity(0.75))
