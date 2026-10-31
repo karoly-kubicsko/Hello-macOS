@@ -1,15 +1,16 @@
 # Hello — a native macOS app
 
 A small SwiftUI application that opens a window with a time-of-day greeting and
-today's date. It is the macOS counterpart of the iPhone web app "Hello", and has
-the same behaviour and colours:
+today's date. The greeting is shown on one line, and wraps onto centred lines
+when the window is too narrow for it. It is the macOS counterpart of the iPhone
+web app "Hello", with the same hours and colours:
 
 | Local time    | Greeting                | Background | Text      | Accent    |
 |---------------|-------------------------|------------|-----------|-----------|
-| 05:00–10:59   | Good morning, Károly    | `#FFE8D6`  | `#3A2E39` | `#A6480B` |
-| 11:00–16:59   | Good afternoon, Károly  | `#EAF4FB`  | `#16324F` | `#B8790A` |
-| 17:00–20:59   | Good evening, Károly    | `#3B2350`  | `#F3E6D8` | `#F2874B` |
-| 21:00–04:59   | Good night, Károly      | `#0B1026`  | `#E4E0F5` | `#F4D35E` |
+| 05:00–10:59   | Good Morning, Károly    | `#FFE8D6`  | `#3A2E39` | `#A6480B` |
+| 11:00–16:59   | Good Afternoon, Károly  | `#EAF4FB`  | `#16324F` | `#B8790A` |
+| 17:00–20:59   | Good Evening, Károly    | `#3B2350`  | `#F3E6D8` | `#F2874B` |
+| 21:00–04:59   | Good Night, Károly      | `#0B1026`  | `#E4E0F5` | `#F4D35E` |
 
 The date is shown in Hungarian order with English month and day names, for
 example *2026. October 30., Friday*.
