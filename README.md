@@ -64,6 +64,22 @@ the first time it is opened. Either:
 
 A copy you build yourself with `build.sh` is not quarantined and opens directly.
 
+## Versions
+
+| Version | Git tag | Changes |
+|---------|---------|---------|
+| 2.0     | `v2.0`  | Greeting on one line; it wraps onto centred lines only in narrow windows. Greetings capitalised ("Good Afternoon"). Wider default window. |
+| 1.0     | `v1.0`  | Time-of-day greeting and colours; date in Hungarian order with English month and day names. |
+
+The installed app's version is shown under **Hello → About Hello**. To build a
+specific version, clone its tag (Git's "detached HEAD" note is expected):
+
+```sh
+git clone --branch v1.0 https://github.com/karoly-kubicsko/Swift.git Hello-1.0
+cd Hello-1.0
+./build.sh --open
+```
+
 ## Project files
 
 | Path                     | Purpose                                                   |
