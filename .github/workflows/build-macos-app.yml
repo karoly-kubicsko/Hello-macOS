@@ -24,13 +24,29 @@ jobs:
           plutil -p build/Hello.app/Contents/Info.plist
           codesign --display --verbose=2 build/Hello.app 2>&1
 
-      - name: Smoke test (launch, stay running, quit)
+      # Launches the app at a light (14:00) and a dark (19:00) time of day, checks
+      # that it keeps running, and takes a screenshot of its window each time.
+      - name: Smoke test and screenshots
         run: |
-          open build/Hello.app
-          sleep 5
-          pgrep -x Hello
-          screencapture -x build/screenshot.png || echo "screencapture unavailable"
-          osascript -e 'quit app "Hello"' || pkill -x Hello
+          mkdir -p build/shots
+          for hour in 14 19; do
+            HELLO_WINDOW_ID_FILE="$PWD/build/shots/window-$hour.txt" \
+              build/Hello.app/Contents/MacOS/Hello -HelloHour "$hour" \
+              > "build/shots/log-$hour.txt" 2>&1 &
+            pid=$!
+            sleep 8
+            kill -0 "$pid"
+            if [[ -s "build/shots/window-$hour.txt" ]]; then
+              screencapture -x -o -l "$(cat "build/shots/window-$hour.txt")" "build/shots/hour-$hour.png" \
+                || screencapture -x "build/shots/hour-$hour.png"
+            else
+              screencapture -x "build/shots/hour-$hour.png"
+            fi
+            kill "$pid"
+            wait "$pid" || true
+            echo "--- app output ($hour:00) ---"
+            cat "build/shots/log-$hour.txt"
+          done
 
       # ditto keeps the executable bit and code signature intact inside the zip.
       - name: Package
@@ -44,6 +60,18 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: screenshot
-          path: build/screenshot.png
+          name: Hello-screenshots
+          path: build/shots/*.png
           if-no-files-found: ignore
+
+      # Small JPEG copies of the screenshots, base64-encoded into the log, so
+      # they can be inspected without downloading the artifact.
+      - name: Print screenshots
+        run: |
+          for f in build/shots/*.png; do
+            [[ -f "$f" ]] || continue
+            sips -s format jpeg -s formatOptions 60 -Z 1000 "$f" --out "${f%.png}.jpg" > /dev/null
+            echo "=== BEGIN $(basename "${f%.png}").jpg ==="
+            base64 -i "${f%.png}.jpg" | fold -w 4000
+            echo "=== END ==="
+          done

@@ -10,19 +10,34 @@ struct HelloApp: App {
 
     var body: some Scene {
         Window("Hello", id: "main") {
-            // The minimum height leaves room for the greeting wrapped onto three lines.
+            // The minimum size leaves room for the glass card with the greeting
+            // wrapped onto three lines.
             GreetingView()
-                .frame(minWidth: 420, minHeight: 320)
+                .frame(minWidth: 420, minHeight: 360)
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 640, height: 380)
+        .defaultSize(width: 720, height: 420)
     }
 }
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Behave like a single-window utility: closing the window quits the app.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Used by the CI smoke test: write the window number so the window can be
+        // captured with `screencapture -l`.
+        guard let path = ProcessInfo.processInfo.environment["HELLO_WINDOW_ID_FILE"] else { return }
+        NSApp.activate()
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            if let window = NSApp.windows.first(where: { $0.isVisible && $0.canBecomeMain }) {
+                try? String(window.windowNumber).write(toFile: path, atomically: true, encoding: .utf8)
+            }
+        }
     }
 }
 
@@ -38,8 +53,7 @@ struct GreetingView: View {
             let theme = Theme(for: context.date)
 
             ZStack {
-                theme.background
-                    .ignoresSafeArea()
+                Backdrop(theme: theme)
 
                 VStack(spacing: 0) {
                     // One line when the window is wide enough; otherwise it wraps onto
@@ -62,7 +76,10 @@ struct GreetingView: View {
                         .foregroundStyle(theme.accent)
                         .multilineTextAlignment(.center)
                 }
-                .padding(32)
+                .padding(.horizontal, 36)
+                .padding(.vertical, 30)
+                .glassEffect(.regular, in: .rect(cornerRadius: 28))
+                .padding(24)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.8), value: theme)
             .preferredColorScheme(theme.isDark ? .dark : .light)
@@ -76,6 +93,30 @@ struct GreetingView: View {
         formatter.dateFormat = "y. MMMM d., EEEE"
         return formatter
     }()
+}
+
+/// The time-of-day colour with two soft glows, so the glass card has something to refract.
+private struct Backdrop: View {
+    let theme: Theme
+
+    var body: some View {
+        GeometryReader { proxy in
+            let side = max(proxy.size.width, proxy.size.height)
+            ZStack {
+                theme.background
+                Circle()
+                    .fill(theme.accent.opacity(theme.isDark ? 0.45 : 0.35))
+                    .frame(width: side * 0.55, height: side * 0.55)
+                    .position(x: proxy.size.width * 0.22, y: proxy.size.height * 0.2)
+                Circle()
+                    .fill(theme.foreground.opacity(theme.isDark ? 0.22 : 0.16))
+                    .frame(width: side * 0.5, height: side * 0.5)
+                    .position(x: proxy.size.width * 0.82, y: proxy.size.height * 0.85)
+            }
+            .blur(radius: side * 0.08)
+        }
+        .ignoresSafeArea()
+    }
 }
 
 // MARK: - Time-of-day theme
@@ -105,7 +146,10 @@ struct Theme: Equatable {
     }
 
     init(for date: Date) {
-        switch Calendar.current.component(.hour, from: date) {
+        // `-HelloHour 14` on the command line previews another time of day (used
+        // for the CI screenshots).
+        let previewHour = UserDefaults.standard.string(forKey: "HelloHour").flatMap { Int($0) }
+        switch previewHour ?? Calendar.current.component(.hour, from: date) {
         case 5..<11: self = .morning
         case 11..<17: self = .afternoon
         case 17..<21: self = .evening

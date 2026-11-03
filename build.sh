@@ -10,7 +10,7 @@
 #       ├── Resources/AppIcon.icns
 #       └── _CodeSignature/          (ad-hoc signature)
 #
-# Requirements: macOS 13 or later with Xcode or the Command Line Tools
+# Requirements: macOS 26 or later with Xcode or the Command Line Tools
 # (install the latter with `xcode-select --install`).
 #
 # Usage: ./build.sh [--open]
