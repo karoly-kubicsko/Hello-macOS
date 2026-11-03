@@ -53,7 +53,8 @@ struct GreetingView: View {
             let theme = Theme(for: context.date)
 
             ZStack {
-                Backdrop(theme: theme)
+                theme.background
+                    .ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     // One line when the window is wide enough; otherwise it wraps onto
@@ -93,30 +94,6 @@ struct GreetingView: View {
         formatter.dateFormat = "y. MMMM d., EEEE"
         return formatter
     }()
-}
-
-/// The time-of-day colour with two soft glows, so the glass card has something to refract.
-private struct Backdrop: View {
-    let theme: Theme
-
-    var body: some View {
-        GeometryReader { proxy in
-            let side = max(proxy.size.width, proxy.size.height)
-            ZStack {
-                theme.background
-                Circle()
-                    .fill(theme.accent.opacity(theme.isDark ? 0.45 : 0.35))
-                    .frame(width: side * 0.55, height: side * 0.55)
-                    .position(x: proxy.size.width * 0.22, y: proxy.size.height * 0.2)
-                Circle()
-                    .fill(theme.foreground.opacity(theme.isDark ? 0.22 : 0.16))
-                    .frame(width: side * 0.5, height: side * 0.5)
-                    .position(x: proxy.size.width * 0.82, y: proxy.size.height * 0.85)
-            }
-            .blur(radius: side * 0.08)
-        }
-        .ignoresSafeArea()
-    }
 }
 
 // MARK: - Time-of-day theme
