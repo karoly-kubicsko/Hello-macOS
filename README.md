@@ -38,12 +38,12 @@ build/Hello.app/
 
 ## Building on a Mac
 
-Requirements: macOS 13 Ventura or later, and either Xcode or the Command Line
+Requirements: macOS 26 Tahoe or later, and either Xcode or the Command Line
 Tools (`xcode-select --install`). No Xcode project is needed.
 
 ```sh
-git clone https://github.com/karoly-kubicsko/Swift.git
-cd Swift
+git clone https://github.com/karoly-kubicsko/Hello-macOS.git
+cd Hello-macOS
 ./build.sh --open          # builds build/Hello.app and launches it
 ```
 
@@ -68,6 +68,7 @@ A copy you build yourself with `build.sh` is not quarantined and opens directly.
 
 | Version | Git tag | Changes |
 |---------|---------|---------|
+| 3.0     | `v3.0`  | Liquid Glass design (macOS 26): the greeting and date sit on a glass card over soft glows in the time-of-day colours. Requires macOS 26 Tahoe. |
 | 2.0     | `v2.0`  | Greeting on one line; it wraps onto centred lines only in narrow windows. Greetings capitalised ("Good Afternoon"). Wider default window. |
 | 1.0     | `v1.0`  | Time-of-day greeting and colours; date in Hungarian order with English month and day names. |
 
@@ -75,7 +76,7 @@ The installed app's version is shown under **Hello → About Hello**. To build a
 specific version, clone its tag (Git's "detached HEAD" note is expected):
 
 ```sh
-git clone --branch v1.0 https://github.com/karoly-kubicsko/Swift.git Hello-1.0
+git clone --branch v1.0 https://github.com/karoly-kubicsko/Hello-macOS.git Hello-1.0
 cd Hello-1.0
 ./build.sh --open
 ```
