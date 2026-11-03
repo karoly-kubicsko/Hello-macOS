@@ -68,7 +68,7 @@ A copy you build yourself with `build.sh` is not quarantined and opens directly.
 
 | Version | Git tag | Changes |
 |---------|---------|---------|
-| 3.0     | `v3.0`  | Liquid Glass design (macOS 26): the greeting and date sit on a glass card over soft glows in the time-of-day colours. Requires macOS 26 Tahoe. |
+| 3.0     | `v3.0`  | Liquid Glass design (macOS 26): the greeting and date sit on a glass card over the time-of-day colour. Requires macOS 26 Tahoe. |
 | 2.0     | `v2.0`  | Greeting on one line; it wraps onto centred lines only in narrow windows. Greetings capitalised ("Good Afternoon"). Wider default window. |
 | 1.0     | `v1.0`  | Time-of-day greeting and colours; date in Hungarian order with English month and day names. |
 
