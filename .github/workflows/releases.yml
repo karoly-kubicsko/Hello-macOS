@@ -1,0 +1,98 @@
+name: Releases
+
+# Publishes the earlier versions of Hello as permanent GitHub Releases (tag v<version>, asset
+# Hello-<version>.zip, the zipped Hello.app). 1.0, 2.0 and 4.0 use the app their CI run built
+# (the Hello-macOS artifact, which GitHub deletes after 90 days). 3.0 has no CI build: its runs
+# were cancelled before a runner took them, so it is built here from its commit with that
+# commit's build.sh. Every app is checked before it is published: version in its Info.plist,
+# code signature, and that it starts.
+#
+# On main the releases are created (existing ones are left alone); on any other branch the job
+# only downloads, builds and checks the apps. It runs when this file changes or by hand. New
+# versions are published by build-macos-app.yml on every build of main.
+
+on:
+  push:
+    paths:
+      - ".github/workflows/releases.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  backfill:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # the commits of the earlier versions
+
+      - name: Create the releases of the earlier versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          plist() {  # plist KEY < Info.plist (XML or binary)
+            python3 -c 'import plistlib, sys; print(plistlib.loads(sys.stdin.buffer.read())[sys.argv[1]])' "$1"
+          }
+          CURRENT=$(plist CFBundleShortVersionString < Resources/Info.plist)
+          PUBLISH=false
+          if [[ "$GITHUB_REF" == refs/heads/main ]]; then PUBLISH=true; fi
+          echo "current version: $CURRENT; create releases: $PUBLISH"
+          mkdir -p assets
+          # version | CI run that built the app ("-": build it here) | commit the app was
+          # built from | commit the tag points to (on main) | what was new. The table is read
+          # from descriptor 3, so nothing in the loop can consume it from standard input.
+          while IFS='|' read -r -u 3 VERSION RUN BUILT SHA SUMMARY; do
+            TAG="v$VERSION"
+            if [[ "$PUBLISH" == true ]] && gh release view "$TAG" > /dev/null 2>&1; then
+              echo "$TAG exists, left alone"
+              continue
+            fi
+            ASSET="assets/Hello-$VERSION.zip"
+            if [[ "$RUN" == - ]]; then
+              git worktree add --detach "src-$VERSION" "$BUILT"
+              (cd "src-$VERSION" && ./build.sh)
+              ditto -c -k --keepParent "src-$VERSION/build/Hello.app" "$ASSET"
+              SOURCE="built by the Releases workflow (run $GITHUB_RUN_ID) from $BUILT"
+            else
+              gh run download "$RUN" --name Hello-macOS --dir "download-$VERSION"
+              mv "download-$VERSION/Hello.zip" "$ASSET"
+              SOURCE="built by run $RUN from $BUILT"
+            fi
+            if [[ "$BUILT" != "$SHA" ]]; then
+              git diff --quiet "$BUILT" "$SHA"   # same files as the commit on main
+              SOURCE="$SOURCE (same files as $SHA on main)"
+            fi
+            # the app in the zip is this version, is signed and starts
+            rm -rf check && mkdir check && ditto -x -k "$ASSET" check
+            APP=check/Hello.app
+            GOT=$(plist CFBundleShortVersionString < "$APP/Contents/Info.plist")
+            MINOS=$(plist LSMinimumSystemVersion < "$APP/Contents/Info.plist")
+            if [[ "$GOT" != "$VERSION" ]]; then echo "$ASSET holds version $GOT"; exit 1; fi
+            codesign --verify --strict "$APP"
+            "$APP/Contents/MacOS/Hello" > "check/log.txt" 2>&1 &
+            pid=$!
+            sleep 6
+            kill -0 "$pid"
+            kill "$pid"; wait "$pid" || true
+            echo "$TAG: Hello.app $GOT, macOS $MINOS+, $(lipo -archs "$APP/Contents/MacOS/Hello"), $(wc -c < "$ASSET" | tr -d ' ') bytes, sha256 $(shasum -a 256 "$ASSET" | cut -d' ' -f1); $SOURCE; signed, starts"
+            NOTES="Hello $VERSION: $SUMMARY Requires macOS $MINOS or later (Apple Silicon and Intel). The app was $SOURCE. Unzip Hello-$VERSION.zip to get Hello.app. It is ad-hoc signed, not notarised: the first time, open it and choose System Settings > Privacy & Security > Open Anyway, or run xattr -dr com.apple.quarantine Hello.app."
+            if [[ "$PUBLISH" != true ]]; then
+              echo "$TAG would be created at $SHA"
+              continue
+            fi
+            LATEST=false
+            if [[ "$VERSION" == "$CURRENT" ]]; then LATEST=true; fi
+            # "|| view": the build of main may have created it in the meantime
+            gh release create "$TAG" "$ASSET" --target "$SHA" --title "Hello $VERSION" --notes "$NOTES" --latest="$LATEST" \
+              || gh release view "$TAG" > /dev/null
+            echo "created $TAG: $(gh release view "$TAG" --json url --jq .url)"
+          done 3<<'TABLE'
+          1.0|41148552908|ec86bcc008d5aac7f80aa2eddc8fb520c6e86d38|ec86bcc008d5aac7f80aa2eddc8fb520c6e86d38|Time-of-day greeting and colours; the date in Hungarian order with English month and day names.
+          2.0|41682861954|3e31f37e223f696e84bf82d26ab63f15bd9eeffd|3e31f37e223f696e84bf82d26ab63f15bd9eeffd|The greeting on one line, wrapping onto centred lines only in narrow windows; greetings capitalised (Good Afternoon); a wider default window.
+          3.0|-|5ac4cc142d753e352c6b214f29ce479cc0975513|5ac4cc142d753e352c6b214f29ce479cc0975513|Liquid Glass design: the greeting and date sit on a glass card over soft glows in the time-of-day colours.
+          4.0|41723661861|93742cd732fde2aafe6d63288c59e2d702223d11|8283a96573652af8d638b0e494db28139305d8cb|The glass card sits on the plain time-of-day colour again, as in 1.0 and 2.0.
+          TABLE
