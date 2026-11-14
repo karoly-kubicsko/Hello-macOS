@@ -64,7 +64,8 @@ The releases are made by CI on GitHub-hosted macOS runners:
 - `.github/workflows/releases.yml` published the earlier versions: 1.0, 2.0 and
   4.0 from the app their CI run built, 3.0 built from its commit (its CI runs
   were cancelled before a runner took them). It checks each app's version,
-  signature and that it starts, and leaves existing releases alone.
+  signature and that it starts. An existing release keeps its title and notes;
+  the app is attached to it if it has none (1.0 and 2.0 were made by hand).
 
 The build of any other branch is under the repository's **Actions** tab as the
 **Hello-macOS** artifact (kept for 90 days); it contains `Hello.zip`.
