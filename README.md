@@ -54,8 +54,7 @@ To install, drag `build/Hello.app` into `/Applications`.
 Every version is on the repository's
 [Releases](https://github.com/karoly-kubicsko/Hello-macOS/releases) page as
 `Hello-<version>.zip`; [the latest release](https://github.com/karoly-kubicsko/Hello-macOS/releases/latest)
-is the current version. Unzip it to get `Hello.app`. The repository is private,
-so the links work for GitHub accounts that have access to it.
+is the current version. Unzip it to get `Hello.app`.
 
 The releases are made by CI on GitHub-hosted macOS runners:
 
