@@ -7,9 +7,11 @@ name: Releases
 # commit's build.sh. Every app is checked before it is published: version in its Info.plist,
 # code signature, and that it starts.
 #
-# On main the releases are created (existing ones are left alone); on any other branch the job
-# only downloads, builds and checks the apps. It runs when this file changes or by hand. New
-# versions are published by build-macos-app.yml on every build of main.
+# On main the releases are created. A release that exists already keeps its title and notes;
+# if it has no Hello-<version>.zip (1.0 and 2.0 were created by hand without one), the checked
+# app is attached to it. On any other branch the job only downloads, builds and checks the apps.
+# It runs when this file changes or by hand. New versions are published by
+# build-macos-app.yml on every build of main.
 
 on:
   push:
@@ -47,9 +49,13 @@ jobs:
           # from descriptor 3, so nothing in the loop can consume it from standard input.
           while IFS='|' read -r -u 3 VERSION RUN BUILT SHA SUMMARY; do
             TAG="v$VERSION"
+            EXISTS=false
             if [[ "$PUBLISH" == true ]] && gh release view "$TAG" > /dev/null 2>&1; then
-              echo "$TAG exists, left alone"
-              continue
+              EXISTS=true
+              if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qx "Hello-$VERSION.zip"; then
+                echo "$TAG exists with Hello-$VERSION.zip, left alone"
+                continue
+              fi
             fi
             ASSET="assets/Hello-$VERSION.zip"
             if [[ "$RUN" == - ]]; then
@@ -82,6 +88,11 @@ jobs:
             NOTES="Hello $VERSION: $SUMMARY Requires macOS $MINOS or later (Apple Silicon and Intel). The app was $SOURCE. Unzip Hello-$VERSION.zip to get Hello.app. It is ad-hoc signed, not notarised: the first time, open it and choose System Settings > Privacy & Security > Open Anyway, or run xattr -dr com.apple.quarantine Hello.app."
             if [[ "$PUBLISH" != true ]]; then
               echo "$TAG would be created at $SHA"
+              continue
+            fi
+            if [[ "$EXISTS" == true ]]; then
+              gh release upload "$TAG" "$ASSET"
+              echo "attached Hello-$VERSION.zip to the existing $TAG (title and notes unchanged): $(gh release view "$TAG" --json url --jq .url)"
               continue
             fi
             LATEST=false
